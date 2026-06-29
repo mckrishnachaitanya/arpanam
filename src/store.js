@@ -24,13 +24,7 @@ const makeDefaultData = () => ({
     triggerDay: 1,       // 1 or 2 — day of month credits auto-generate
     pinHash: null,
   },
-  categories: [
-    { id: uuid(), name: 'Parents',     emoji: '👨‍👩‍👧', order: 0, monthlyAmount: 0, createdAt: new Date().toISOString() },
-    { id: uuid(), name: 'In-laws',    emoji: '🏠',     order: 1, monthlyAmount: 0, createdAt: new Date().toISOString() },
-    { id: uuid(), name: 'Service',    emoji: '🔧',     order: 2, monthlyAmount: 0, createdAt: new Date().toISOString() },
-    { id: uuid(), name: 'Devotional', emoji: '🙏',     order: 3, monthlyAmount: 0, createdAt: new Date().toISOString() },
-    { id: uuid(), name: 'Others',     emoji: '📦',     order: 4, monthlyAmount: 0, createdAt: new Date().toISOString() },
-  ],
+  categories: [],
   transactions: [],
 })
 
