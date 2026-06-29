@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import EmojiPicker from '../components/EmojiPicker'
 import {
   getCategories, addCategory, updateCategory, deleteCategory,
   updateSettings, savePIN, removePIN, hashPIN, fmt,
@@ -75,6 +76,7 @@ function BucketRow({ cat, data, setData }) {
   const [name, setName] = useState(cat.name)
   const [emoji, setEmoji] = useState(cat.emoji)
   const [amount, setAmount] = useState(String(cat.monthlyAmount || 0))
+  const [showPicker, setShowPicker] = useState(false)
 
   const save = () => {
     const val = parseFloat(amount) || 0
@@ -91,9 +93,9 @@ function BucketRow({ cat, data, setData }) {
   if (editing) {
     return (
       <div style={s.bucketEdit}>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-          <input value={emoji} onChange={e => setEmoji(e.target.value)}
-            style={{ ...s.input, width: 56, textAlign: 'center', fontSize: 20 }} />
+        {showPicker && <EmojiPicker onSelect={e => { setEmoji(e); setShowPicker(false) }} onClose={() => setShowPicker(false)} />}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center' }}>
+          <button onClick={() => setShowPicker(true)} style={s.emojiPickBtn}>{emoji}</button>
           <input value={name} onChange={e => setName(e.target.value)}
             placeholder="Bucket name" style={{ ...s.input, flex: 1 }} />
         </div>
@@ -132,6 +134,7 @@ function AddBucketRow({ data, setData }) {
   const [name, setName] = useState('')
   const [emoji, setEmoji] = useState('📁')
   const [amount, setAmount] = useState('')
+  const [showPicker, setShowPicker] = useState(false)
 
   const save = () => {
     if (!name.trim()) return
@@ -143,9 +146,9 @@ function AddBucketRow({ data, setData }) {
   if (adding) {
     return (
       <div style={s.bucketEdit}>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-          <input value={emoji} onChange={e => setEmoji(e.target.value)}
-            style={{ ...s.input, width: 56, textAlign: 'center', fontSize: 20 }} />
+        {showPicker && <EmojiPicker onSelect={e => { setEmoji(e); setShowPicker(false) }} onClose={() => setShowPicker(false)} />}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center' }}>
+          <button onClick={() => setShowPicker(true)} style={s.emojiPickBtn}>{emoji}</button>
           <input value={name} onChange={e => setName(e.target.value)}
             placeholder="Bucket name" style={{ ...s.input, flex: 1 }} autoFocus />
         </div>
@@ -559,5 +562,14 @@ Object.assign(s, {
     width: '100%', background: 'transparent', color: '#6b5a30',
     border: 'none', padding: '12px', fontSize: 12,
     cursor: 'pointer', marginTop: 4, textAlign: 'center',
+  },
+})
+
+Object.assign(s, {
+  emojiPickBtn: {
+    width: 48, height: 48, fontSize: 24, background: '#0a0800',
+    border: '1px solid #ca8a04', borderRadius: 10, cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
   },
 })

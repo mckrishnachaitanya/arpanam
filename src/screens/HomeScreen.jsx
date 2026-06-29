@@ -62,7 +62,13 @@ export default function HomeScreen({ data, setData, onNavigate, onClearCache, sy
         </div>
 
         {categories.length === 0 && (
-          <div style={s.empty}>No buckets yet — add one in Settings.</div>
+          <div style={s.emptyState}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🪣</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: '#ca8a04', marginBottom: 6 }}>No buckets yet</div>
+            <div style={{ fontSize: 13, color: '#6b5a30', textAlign: 'center', lineHeight: 1.6 }}>
+              Go to Settings to add your first bucket and start tracking purposeful giving.
+            </div>
+          </div>
         )}
       </div>
 
@@ -118,6 +124,7 @@ const s = {
   cardRight: { display: 'flex', alignItems: 'center', gap: 6 },
   balance: { fontSize: 15, fontWeight: 700 },
   empty: { fontSize: 13, color: '#3a3020', textAlign: 'center', padding: '32px 0' },
+  emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px' },
   footer: { padding: '24px 16px 0', display: 'flex', justifyContent: 'center' },
   cacheBtn: {
     background: 'transparent', color: '#3a3020', border: '1px solid #2a2010',
