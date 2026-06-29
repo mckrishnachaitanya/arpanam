@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { loadData, runAutoCredit } from './store'
 import { usePIN } from './usePIN'
+import { useSync } from './useSync'
 import LockScreen from './screens/LockScreen'
 import HomeScreen from './screens/HomeScreen'
 import CategoryScreen from './screens/CategoryScreen'
@@ -38,8 +39,8 @@ export default function App() {
   }
 
   const navigate = (name, params = {}) => setScreen({ name, params })
-
   const pin = usePIN(data)
+  const sync = useSync(data, setData)
 
   if (!data) {
     return (
@@ -52,6 +53,7 @@ export default function App() {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: '#0a0800', minHeight: '100dvh' }}>
       <div style={{ position: 'fixed', inset: 0, background: '#0a0800', zIndex: -1 }} />
+
       {updateAvailable && (
         <div style={bannerStyle}>
           <span style={{ fontSize: 13, fontWeight: 600, color: '#0a0800' }}>New version available</span>
@@ -72,6 +74,7 @@ export default function App() {
           data={data} setData={setData}
           onNavigate={navigate}
           onClearCache={handleClearCache}
+          sync={sync}
         />
       ) : screen.name === 'category' ? (
         <CategoryScreen
@@ -83,6 +86,7 @@ export default function App() {
         <SettingsScreen
           data={data} setData={setData}
           onBack={() => navigate('home')}
+          sync={sync}
         />
       ) : null}
     </div>
