@@ -5,6 +5,7 @@ const MAX_ATTEMPTS = 5
 const LOCKOUT_SECONDS = 30
 
 export function usePIN(data) {
+  // Start locked until we confirm data is loaded and has no PIN
   const [unlocked, setUnlocked] = useState(false)
   const [attempts, setAttempts] = useState(0)
   const [lockedUntil, setLockedUntil] = useState(null)
@@ -12,10 +13,12 @@ export function usePIN(data) {
 
   const hasPIN = !!data?.settings?.pinHash
 
-  // If no PIN set, always unlocked
+  // Only unlock automatically once data is loaded and no PIN is set
   useEffect(() => {
-    if (!hasPIN) setUnlocked(true)
-  }, [hasPIN])
+    if (data === null) return        // still loading — stay locked
+    if (!hasPIN) setUnlocked(true)  // data loaded, no PIN → unlock
+    // if hasPIN → stay locked, wait for user to enter PIN
+  }, [data, hasPIN])
 
   // Countdown timer during lockout
   useEffect(() => {
