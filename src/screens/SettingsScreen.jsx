@@ -469,7 +469,7 @@ Object.assign(s, {
 // ── Cloud Sync Section ────────────────────────────────────────────────────────
 function CloudSyncSection({ sync }) {
   if (!sync) return null
-  const { user, syncing, lastSynced, syncError, handleSignIn, handleSignOut, handleManualSync } = sync
+  const { user, syncing, lastSynced, syncError, handleSignIn, handleSignOut, handleManualSync, handleDeleteCloud } = sync
 
   const fmtSynced = (date) => {
     if (!date) return null
@@ -520,6 +520,16 @@ function CloudSyncSection({ sync }) {
           Sign out
         </button>
       </div>
+      <button
+        onClick={() => {
+          if (confirm('This will permanently delete your data from the cloud. Local data is unaffected. Continue?')) {
+            handleDeleteCloud()
+          }
+        }}
+        style={s.deleteCloudBtn}
+      >
+        Delete cloud data
+      </button>
     </div>
   )
 }
@@ -541,5 +551,13 @@ Object.assign(s, {
     flex: 1, background: '#0a0800', border: '1px solid #ca8a04',
     borderRadius: 8, padding: '10px', color: '#ca8a04',
     fontSize: 13, fontWeight: 600, cursor: 'pointer',
+  },
+})
+
+Object.assign(s, {
+  deleteCloudBtn: {
+    width: '100%', background: 'transparent', color: '#6b5a30',
+    border: 'none', padding: '12px', fontSize: 12,
+    cursor: 'pointer', marginTop: 4, textAlign: 'center',
   },
 })
