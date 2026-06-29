@@ -1,10 +1,9 @@
 import { getCategories, getAllBalances, getTotalBalance, fmt } from '../store'
 
-export default function HomeScreen({ data }) {
+export default function HomeScreen({ data, setData, onNavigate, onClearCache }) {
   const categories = getCategories(data)
   const balances = getAllBalances(data)
   const total = getTotalBalance(data)
-  const { splitPercent } = data.settings
 
   return (
     <div style={s.root}>
@@ -14,53 +13,55 @@ export default function HomeScreen({ data }) {
           <div style={s.headerTitle}>Arpanam</div>
           <div style={s.headerSub}>Purposeful giving</div>
         </div>
-        <div style={s.coinSmall}>
-          <svg width="36" height="36" viewBox="0 0 512 512" fill="none">
-            <defs>
-              <radialGradient id="hc" cx="45%" cy="38%" r="60%" gradientUnits="objectBoundingBox">
-                <stop offset="0%" stopColor="#fff7c2"/>
-                <stop offset="30%" stopColor="#fde047"/>
-                <stop offset="70%" stopColor="#ca8a04"/>
-                <stop offset="100%" stopColor="#78350f"/>
-              </radialGradient>
-              <radialGradient id="hr" cx="50%" cy="50%" r="50%" gradientUnits="objectBoundingBox">
-                <stop offset="0%" stopColor="#92400e"/>
-                <stop offset="100%" stopColor="#451a03"/>
-              </radialGradient>
-            </defs>
-            <rect width="512" height="512" fill="#0a0800" rx="115"/>
-            <ellipse cx="261" cy="270" rx="146" ry="146" fill="url(#hr)"/>
-            <ellipse cx="256" cy="256" rx="138" ry="138" fill="url(#hc)"/>
-            <text x="256" y="292" textAnchor="middle" fontSize="148" fontWeight="900" fill="#78350f" opacity="0.85" fontFamily="serif">अ</text>
+        <button onClick={() => onNavigate('settings')} style={s.settingsBtn}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" strokeWidth="2" strokeLinecap="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
           </svg>
-        </div>
+        </button>
       </div>
 
-      {/* Total balance card */}
+      {/* Total */}
       <div style={s.totalCard}>
         <div style={s.totalLabel}>Total across all buckets</div>
         <div style={s.totalAmount}>{fmt(total)}</div>
-        <div style={s.totalSub}>{splitPercent}% split · {categories.length} categories</div>
+        <div style={s.totalSub}>{categories.length} categories</div>
       </div>
 
       {/* Categories */}
       <div style={s.section}>
         <div style={s.sectionTitle}>Your buckets</div>
-        {categories.length === 0 ? (
-          <div style={s.empty}>No categories yet. Add one to get started.</div>
-        ) : (
-          <div style={s.list}>
-            {categories.map(cat => (
-              <div key={cat.id} style={s.card}>
-                <div style={s.cardLeft}>
-                  <div style={s.emoji}>{cat.emoji}</div>
+        <div style={s.list}>
+          {categories.map(cat => (
+            <button key={cat.id} onClick={() => onNavigate('category', { categoryId: cat.id })} style={s.card}>
+              <div style={s.cardLeft}>
+                <div style={s.emoji}>{cat.emoji}</div>
+                <div>
                   <div style={s.catName}>{cat.name}</div>
+                  <div style={s.catSub}>₹{cat.monthlyAmount?.toLocaleString('en-IN') || 0}/mo</div>
                 </div>
-                <div style={s.balance}>{fmt(balances[cat.id] ?? 0)}</div>
               </div>
-            ))}
-          </div>
+              <div style={s.cardRight}>
+                <div style={{
+                  ...s.balance,
+                  color: balances[cat.id] >= 0 ? '#ca8a04' : '#ef4444'
+                }}>{fmt(balances[cat.id] ?? 0)}</div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3a3020" strokeWidth="2" strokeLinecap="round">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {categories.length === 0 && (
+          <div style={s.empty}>No buckets yet — add one in Settings.</div>
         )}
+      </div>
+
+      {/* Footer */}
+      <div style={s.footer}>
+        <button onClick={onClearCache} style={s.cacheBtn}>Clear cache & refresh</button>
       </div>
     </div>
   )
@@ -68,117 +69,51 @@ export default function HomeScreen({ data }) {
 
 const s = {
   root: {
-    minHeight: '100dvh',
-    background: '#0a0800',
-    color: '#f1f1f3',
+    minHeight: '100dvh', background: '#0a0800', color: '#f1f1f3',
     fontFamily: "'Inter', system-ui, sans-serif",
+    display: 'flex', flexDirection: 'column',
     paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
   },
   header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '56px 24px 20px',
-    borderBottom: '1px solid #1a1500',
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '56px 20px 20px', borderBottom: '1px solid #1a1500',
   },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 800,
-    color: '#fde047',
-    letterSpacing: '-0.3px',
-  },
-  headerSub: {
-    fontSize: 11,
-    color: '#6b5a30',
-    marginTop: 2,
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-    fontWeight: 600,
-  },
-  coinSmall: {
-    borderRadius: '22.5%',
-    overflow: 'hidden',
-    boxShadow: '0 2px 12px rgba(202,138,4,0.2)',
-  },
+  headerTitle: { fontSize: 22, fontWeight: 800, color: '#fde047', letterSpacing: '-0.3px' },
+  headerSub: { fontSize: 11, color: '#6b5a30', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 },
+  settingsBtn: { background: 'none', border: 'none', cursor: 'pointer', padding: 8 },
   totalCard: {
-    margin: '20px 16px',
-    background: '#130f00',
-    border: '1px solid #2a2010',
-    borderRadius: 16,
-    padding: '20px 22px',
+    margin: '16px', background: '#130f00', border: '1px solid #2a2010',
+    borderRadius: 16, padding: '20px 22px',
   },
-  totalLabel: {
-    fontSize: 12,
-    color: '#6b5a30',
-    marginBottom: 6,
-    fontWeight: 500,
-  },
-  totalAmount: {
-    fontSize: 32,
-    fontWeight: 800,
-    color: '#fde047',
-    letterSpacing: '-0.5px',
-    marginBottom: 6,
-  },
-  totalSub: {
-    fontSize: 11,
-    color: '#3a3020',
-    fontWeight: 500,
-  },
-  section: {
-    padding: '0 16px',
-  },
+  totalLabel: { fontSize: 12, color: '#6b5a30', marginBottom: 6, fontWeight: 500 },
+  totalAmount: { fontSize: 32, fontWeight: 800, color: '#fde047', letterSpacing: '-0.5px', marginBottom: 4 },
+  totalSub: { fontSize: 11, color: '#3a3020', fontWeight: 500 },
+  section: { padding: '0 16px', flex: 1 },
   sectionTitle: {
-    fontSize: 12,
-    color: '#6b5a30',
-    fontWeight: 600,
-    letterSpacing: '1px',
-    textTransform: 'uppercase',
-    marginBottom: 12,
+    fontSize: 11, color: '#6b5a30', fontWeight: 600,
+    letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 10,
   },
-  list: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 10,
-  },
+  list: { display: 'flex', flexDirection: 'column', gap: 8 },
   card: {
-    background: '#130f00',
-    border: '1px solid #2a2010',
-    borderRadius: 14,
-    padding: '16px 18px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    background: '#130f00', border: '1px solid #2a2010', borderRadius: 14,
+    padding: '14px 16px', display: 'flex', justifyContent: 'space-between',
+    alignItems: 'center', cursor: 'pointer', width: '100%', textAlign: 'left',
+    WebkitTapHighlightColor: 'transparent',
   },
-  cardLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-  },
+  cardLeft: { display: 'flex', alignItems: 'center', gap: 12 },
   emoji: {
-    fontSize: 24,
-    width: 40,
-    height: 40,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: '#1a1500',
-    borderRadius: 10,
+    fontSize: 22, width: 42, height: 42, display: 'flex',
+    alignItems: 'center', justifyContent: 'center',
+    background: '#1a1500', borderRadius: 10, flexShrink: 0,
   },
-  catName: {
-    fontSize: 15,
-    fontWeight: 600,
-    color: '#f1f1f3',
-  },
-  balance: {
-    fontSize: 16,
-    fontWeight: 700,
-    color: '#ca8a04',
-  },
-  empty: {
-    fontSize: 13,
-    color: '#3a3020',
-    textAlign: 'center',
-    padding: '32px 0',
+  catName: { fontSize: 15, fontWeight: 600, color: '#f1f1f3' },
+  catSub: { fontSize: 11, color: '#6b5a30', marginTop: 2 },
+  cardRight: { display: 'flex', alignItems: 'center', gap: 6 },
+  balance: { fontSize: 15, fontWeight: 700 },
+  empty: { fontSize: 13, color: '#3a3020', textAlign: 'center', padding: '32px 0' },
+  footer: { padding: '24px 16px 0', display: 'flex', justifyContent: 'center' },
+  cacheBtn: {
+    background: 'transparent', color: '#3a3020', border: '1px solid #2a2010',
+    borderRadius: 8, padding: '8px 16px', fontSize: 12, cursor: 'pointer',
   },
 }
