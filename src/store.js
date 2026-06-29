@@ -255,3 +255,37 @@ export const fmtMonth = (yyyymm) => {
   return new Date(Number(y), Number(m) - 1, 1)
     .toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
 }
+
+// ─── Export ───────────────────────────────────────────────────────────────────
+export function exportData(data) {
+  const json = JSON.stringify(data, null, 2)
+  const blob = new Blob([json], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  const date = new Date().toISOString().slice(0, 10)
+  a.href = url
+  a.download = `arpanam-backup-${date}.json`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ─── Import ───────────────────────────────────────────────────────────────────
+export function validateBackup(parsed) {
+  // Basic structure check
+  if (!parsed || typeof parsed !== 'object') return false
+  if (!parsed.meta?.lastUpdated) return false
+  if (!Array.isArray(parsed.categories)) return false
+  if (!Array.isArray(parsed.transactions)) return false
+  if (!parsed.settings) return false
+  return true
+}
+
+export function resolveImport(current, imported) {
+  const currentDate = new Date(current.meta.lastUpdated)
+  const importedDate = new Date(imported.meta.lastUpdated)
+  return {
+    importedIsNewer: importedDate > currentDate,
+    currentDateStr: currentDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    importedDateStr: importedDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+  }
+}
