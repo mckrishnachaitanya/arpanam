@@ -1,52 +1,61 @@
 import sharp from 'sharp'
-import { readFileSync, writeFileSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { createRequire } from 'module'
+import { execSync } from 'child_process'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = join(__dirname, '..')
 
-async function fetchFont() {
+// Find Noto Sans Telugu font on the system
+function findTeluguFont() {
   try {
-    // Download Noto Sans Telugu from Google Fonts CDN
-    const urls = [
-      'https://fonts.gstatic.com/s/notosanstelugu/v20/0pkhp9tiero83OgifNG7sW6MiAUBnGl9-0o.woff2',
-      'https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu&display=swap',
-    ]
-    
-    // Use the direct TTF from Google APIs
-    const response = await fetch(
-      'https://fonts.gstatic.com/s/notosanstelugu/v20/0pkhp9tiero83OgifNG7sW6MiAUBnGl9-0o.woff2'
-    )
-    
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    const buffer = await response.arrayBuffer()
-    const base64 = Buffer.from(buffer).toString('base64')
-    console.log('  ✓ Font downloaded')
-    return base64
-  } catch (err) {
-    console.warn('  ⚠ Could not download font:', err.message)
-    return null
+    const result = execSync('fc-list :lang=te', { encoding: 'utf8' })
+    const lines = result.trim().split('\n').filter(Boolean)
+    for (const line of lines) {
+      const path = line.split(':')[0].trim()
+      if (path && existsSync(path)) {
+        console.log(`  ✓ Found Telugu font: ${path}`)
+        return path
+      }
+    }
+  } catch {}
+
+  // Fallback paths
+  const fallbacks = [
+    '/usr/share/fonts/truetype/noto/NotoSansTelugu-Regular.ttf',
+    '/usr/share/fonts/opentype/noto/NotoSansTelugu-Regular.otf',
+    '/usr/share/fonts/noto/NotoSansTelugu-Regular.ttf',
+  ]
+  for (const p of fallbacks) {
+    if (existsSync(p)) {
+      console.log(`  ✓ Found Telugu font (fallback): ${p}`)
+      return p
+    }
   }
+
+  console.warn('  ⚠ Telugu font not found — will use fallback A')
+  return null
 }
 
-async function buildSVG(fontBase64) {
-  const fontFace = fontBase64
-    ? `<style>
-        @font-face {
-          font-family: 'NotoTelugu';
-          src: url('data:font/woff2;base64,${fontBase64}') format('woff2');
-        }
-      </style>`
-    : ''
+function buildSVG(fontPath) {
+  let fontFace = ''
+  let textEl = `<text x="256" y="295" text-anchor="middle" font-size="148" font-weight="900"
+      font-family="serif" fill="#78350f" opacity="0.85">A</text>`
 
-  const textEl = fontBase64
-    ? `<text x="256" y="295" text-anchor="middle" font-size="148" font-weight="700"
-        font-family="NotoTelugu, serif" fill="#78350f" opacity="0.85">అ</text>`
-    : `<!-- Font unavailable - fallback to A -->
-       <text x="256" y="295" text-anchor="middle" font-size="148" font-weight="900"
-        font-family="serif" fill="#78350f" opacity="0.85">A</text>`
+  if (fontPath) {
+    const fontData = readFileSync(fontPath)
+    const base64 = fontData.toString('base64')
+    const ext = fontPath.endsWith('.otf') ? 'opentype' : 'truetype'
+    fontFace = `<style>
+      @font-face {
+        font-family: 'NotoTelugu';
+        src: url('data:font/${ext};base64,${base64}') format('${ext}');
+      }
+    </style>`
+    textEl = `<text x="256" y="300" text-anchor="middle" font-size="148" font-weight="700"
+      font-family="NotoTelugu, sans-serif" fill="#78350f" opacity="0.85">అ</text>`
+  }
 
   return `<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -74,12 +83,11 @@ async function buildSVG(fontBase64) {
 }
 
 console.log('Generating PWA icons...')
-console.log('Fetching Telugu font...')
+console.log('Looking for Telugu font...')
 
-const fontBase64 = await fetchFont()
-const svgContent = await buildSVG(fontBase64)
+const fontPath = findTeluguFont()
+const svgContent = buildSVG(fontPath)
 
-// Write the resolved SVG
 writeFileSync(join(root, 'public/icons/icon.svg'), svgContent)
 
 const svgBuffer = Buffer.from(svgContent)
