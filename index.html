@@ -8,14 +8,16 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Arpanam" />
-
     <link rel="manifest" href="/arpanam/manifest.json" />
     <link rel="apple-touch-icon" href="/arpanam/icons/apple-touch-icon.png" />
     <link rel="icon" type="image/png" href="/arpanam/favicon.png" />
-
     <title>Arpanam</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body, #root { background: #0a0800; min-height: 100%; min-height: 100dvh; }
+    </style>
   </head>
-  <body>
+  <body style="background: #0a0800;">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
