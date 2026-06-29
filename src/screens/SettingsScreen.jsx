@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import {
   getCategories, addCategory, updateCategory, deleteCategory,
-  updateSettings, savePIN, removePIN, hashPIN, fmt
+  updateSettings, savePIN, removePIN, hashPIN, fmt,
+  exportData, validateBackup, resolveImport, saveData
 } from '../store'
 
 export default function SettingsScreen({ data, setData, onBack }) {
@@ -50,6 +51,12 @@ export default function SettingsScreen({ data, setData, onBack }) {
         <div style={s.section}>
           <div style={s.sectionTitle}>Security</div>
           <PINSection data={data} setData={setData} />
+        </div>
+
+        {/* Data */}
+        <div style={s.section}>
+          <div style={s.sectionTitle}>Data</div>
+          <DataSection data={data} setData={setData} />
         </div>
       </div>
     </div>
@@ -327,3 +334,128 @@ const s = {
   },
   err: { fontSize: 12, color: '#ef4444', marginBottom: 10 },
 }
+
+// ── Data Section ──────────────────────────────────────────────────────────────
+function DataSection({ data, setData }) {
+  const [importState, setImportState] = useState(null)
+  // importState: null | { imported, importedIsNewer, currentDateStr, importedDateStr }
+
+  const handleExport = () => exportData(data)
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target.result)
+        if (!validateBackup(parsed)) {
+          alert('Invalid backup file. Please select a valid Arpanam backup.')
+          return
+        }
+        const resolution = resolveImport(data, parsed)
+        setImportState({ imported: parsed, ...resolution })
+      } catch {
+        alert('Could not read file. Make sure it is a valid JSON backup.')
+      }
+    }
+    reader.readAsText(file)
+    // Reset input so same file can be re-selected
+    e.target.value = ''
+  }
+
+  const confirmImport = (force = false) => {
+    if (!importState) return
+    const { imported, importedIsNewer } = importState
+    if (importedIsNewer || force) {
+      setData(saveData(imported))
+      setImportState(null)
+      alert('Data imported successfully.')
+    }
+  }
+
+  return (
+    <div>
+      {/* Export */}
+      <button onClick={handleExport} style={s.dataBtn}>
+        <span style={s.dataBtnIcon}>📤</span>
+        <div>
+          <div style={s.dataBtnLabel}>Export data</div>
+          <div style={s.dataBtnSub}>Download a backup JSON file</div>
+        </div>
+      </button>
+
+      {/* Import */}
+      <label style={s.dataBtn}>
+        <span style={s.dataBtnIcon}>📥</span>
+        <div>
+          <div style={s.dataBtnLabel}>Import data</div>
+          <div style={s.dataBtnSub}>Restore from a backup JSON file</div>
+        </div>
+        <input type="file" accept=".json" onChange={handleFileChange} style={{ display: 'none' }} />
+      </label>
+
+      {/* Conflict resolution dialog */}
+      {importState && (
+        <div style={s.importDialog}>
+          <div style={s.importTitle}>Confirm Import</div>
+
+          <div style={s.importRow}>
+            <div style={s.importRowLabel}>Your current data</div>
+            <div style={s.importRowDate}>{importState.currentDateStr}</div>
+          </div>
+          <div style={s.importRow}>
+            <div style={s.importRowLabel}>Backup file date</div>
+            <div style={s.importRowDate}>{importState.importedDateStr}</div>
+          </div>
+
+          {importState.importedIsNewer ? (
+            <div style={s.importNote}>
+              ✓ Backup is newer — safe to import.
+            </div>
+          ) : (
+            <div style={{ ...s.importNote, color: '#f97316' }}>
+              ⚠ Your current data is newer than this backup. Importing will overwrite more recent data.
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+            <button onClick={() => setImportState(null)} style={s.cancelBtn}>Cancel</button>
+            {importState.importedIsNewer ? (
+              <button onClick={() => confirmImport(false)} style={s.saveBtn}>Import</button>
+            ) : (
+              <button onClick={() => confirmImport(true)} style={{ ...s.saveBtn, background: '#f97316' }}>
+                Force Import
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Append data styles to s object — injected separately to avoid rewriting the whole styles block
+Object.assign(s, {
+  dataBtn: {
+    width: '100%', background: '#130f00', border: '1px solid #2a2010',
+    borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center',
+    gap: 14, marginBottom: 8, cursor: 'pointer', textAlign: 'left',
+    WebkitTapHighlightColor: 'transparent',
+  },
+  dataBtnIcon: { fontSize: 22, flexShrink: 0 },
+  dataBtnLabel: { fontSize: 14, fontWeight: 600, color: '#f1f1f3', marginBottom: 2 },
+  dataBtnSub: { fontSize: 12, color: '#6b5a30' },
+  importDialog: {
+    background: '#1a1000', border: '1px solid #ca8a04',
+    borderRadius: 12, padding: '16px', marginTop: 8,
+  },
+  importTitle: { fontSize: 14, fontWeight: 700, color: '#fde047', marginBottom: 12 },
+  importRow: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    marginBottom: 8,
+  },
+  importRowLabel: { fontSize: 12, color: '#6b5a30' },
+  importRowDate: { fontSize: 12, color: '#f1f1f3', fontWeight: 600 },
+  importNote: { fontSize: 12, color: '#4ade80', marginTop: 8, lineHeight: 1.5 },
+})
