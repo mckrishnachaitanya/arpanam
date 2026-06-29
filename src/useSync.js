@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { onAuthChange, signInWithGoogle, signOut, pushToCloud, pullFromCloud } from './firebase'
+import { onAuthChange, signInWithGoogle, signOut, pushToCloud, pullFromCloud, deleteCloudData } from './firebase'
 import { saveData } from './store'
 
 export function useSync(data, setData) {
@@ -80,6 +80,17 @@ export function useSync(data, setData) {
     }
   }, [user, data, setData])
 
+  const handleDeleteCloud = useCallback(async () => {
+    if (!user) return
+    const ok = await deleteCloudData(user.uid)
+    if (ok) {
+      setLastSynced(null)
+      setSyncError(null)
+    } else {
+      setSyncError('Failed to delete cloud data. Try again.')
+    }
+  }, [user])
+
   return {
     user,
     syncing,
@@ -89,6 +100,7 @@ export function useSync(data, setData) {
     handleSignIn,
     handleSignOut,
     handleManualSync,
+    handleDeleteCloud,
   }
 }
 

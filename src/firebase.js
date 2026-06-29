@@ -11,6 +11,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  deleteDoc,
 } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -64,5 +65,16 @@ export async function pullFromCloud(uid) {
   } catch (err) {
     console.error('Pull failed:', err)
     return null
+  }
+}
+
+// ─── Delete cloud data ────────────────────────────────────────────────────────
+export async function deleteCloudData(uid) {
+  try {
+    await deleteDoc(userDoc(uid))
+    return true
+  } catch (err) {
+    console.error('Delete failed:', err)
+    return false
   }
 }
