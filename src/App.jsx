@@ -50,7 +50,8 @@ export default function App() {
   }
 
   return (
-    <div style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: '#0a0800', minHeight: '100dvh' }}>
+      <div style={{ position: 'fixed', inset: 0, background: '#0a0800', zIndex: -1 }} />
       {updateAvailable && (
         <div style={bannerStyle}>
           <span style={{ fontSize: 13, fontWeight: 600, color: '#0a0800' }}>New version available</span>
