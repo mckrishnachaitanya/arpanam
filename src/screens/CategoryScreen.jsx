@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   getCategories, getTransactions, getCategoryBalance,
   addTransaction, updateTransaction, deleteTransaction,
-  generatePeriodTransactions, fmt, fmtDate, fmtMonth
+  generatePeriodTransactions, saveData, fmt, fmtDate, fmtMonth
 } from '../store'
 
 const TABS = ['all', 'credit', 'debit']
@@ -93,6 +93,26 @@ export default function CategoryScreen({ data, setData, categoryId, onBack }) {
           </div>
         ))}
       </div>
+
+      {/* Danger zone */}
+      {txs.length > 0 && (
+        <div style={{ padding: '24px 16px 0', display: 'flex', justifyContent: 'center' }}>
+          <button
+            onClick={() => {
+              if (confirm(`Delete ALL transactions for ${cat.name}? This cannot be undone.`)) {
+                const updated = saveData({
+                  ...data,
+                  transactions: data.transactions.filter(t => t.categoryId !== categoryId)
+                })
+                setData(updated)
+              }
+            }}
+            style={s.clearAllBtn}
+          >
+            Clear all transactions
+          </button>
+        </div>
+      )}
 
       {/* Modals */}
       {modal === 'spend' && (
@@ -424,3 +444,12 @@ const s = {
   periodRow: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 },
   err: { fontSize: 12, color: '#ef4444', marginBottom: 10 },
 }
+
+// Append clear all style
+Object.assign(s, {
+  clearAllBtn: {
+    background: 'transparent', color: '#6b5a30',
+    border: '1px solid #2a2010', borderRadius: 8,
+    padding: '10px 20px', fontSize: 12, cursor: 'pointer',
+  },
+})

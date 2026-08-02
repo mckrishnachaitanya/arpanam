@@ -6,7 +6,7 @@ import {
   exportData, validateBackup, resolveImport, saveData
 } from '../store'
 
-export default function SettingsScreen({ data, setData, onBack, sync }) {
+export default function SettingsScreen({ data, setData, onBack, sync, onNavigate }) {
   const [section, setSection] = useState(null) // 'categories' | 'pin' | 'trigger'
   const categories = getCategories(data)
 
@@ -52,6 +52,20 @@ export default function SettingsScreen({ data, setData, onBack, sync }) {
         <div style={s.section}>
           <div style={s.sectionTitle}>Security</div>
           <PINSection data={data} setData={setData} />
+        </div>
+
+        {/* Bulk Period Entry */}
+        <div style={s.section}>
+          <div style={s.sectionTitle}>Bulk entry</div>
+          <button onClick={() => onNavigate('bulkperiod')} style={s.navRow}>
+            <div>
+              <div style={s.rowLabel}>Bulk Period Entry</div>
+              <div style={s.rowSub}>Add credit or debit history across all buckets at once</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3a3020" strokeWidth="2" strokeLinecap="round">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </button>
         </div>
 
         {/* Cloud Sync */}
@@ -571,5 +585,15 @@ Object.assign(s, {
     border: '1px solid #ca8a04', borderRadius: 10, cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     flexShrink: 0,
+  },
+})
+
+Object.assign(s, {
+  navRow: {
+    width: '100%', background: '#130f00', border: '1px solid #2a2010',
+    borderRadius: 12, padding: '14px 16px', display: 'flex',
+    alignItems: 'center', justifyContent: 'space-between',
+    cursor: 'pointer', textAlign: 'left',
+    WebkitTapHighlightColor: 'transparent',
   },
 })
