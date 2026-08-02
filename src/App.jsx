@@ -6,6 +6,7 @@ import LockScreen from './screens/LockScreen'
 import HomeScreen from './screens/HomeScreen'
 import CategoryScreen from './screens/CategoryScreen'
 import SettingsScreen from './screens/SettingsScreen'
+import BulkPeriodScreen from './screens/BulkPeriodScreen'
 
 export default function App() {
   const [data, setData] = useState(null)
@@ -86,7 +87,13 @@ export default function App() {
         <SettingsScreen
           data={data} setData={setData}
           onBack={() => navigate('home')}
+          onNavigate={navigate}
           sync={sync}
+        />
+      ) : screen.name === 'bulkperiod' ? (
+        <BulkPeriodScreen
+          data={data} setData={setData}
+          onBack={() => navigate('settings')}
         />
       ) : null}
     </div>
