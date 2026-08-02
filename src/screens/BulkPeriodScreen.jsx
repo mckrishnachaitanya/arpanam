@@ -53,9 +53,11 @@ export default function BulkPeriodScreen({ data, setData, onBack }) {
       const amt = sameAmount ? parseFloat(commonAmount) : parseFloat(perCategory[cat.id]?.amount)
       const note = sameNote ? commonNote : perCategory[cat.id]?.note
       if (!amt || amt <= 0) return
-      const before = updatedData.transactions.length
-      updatedData = generatePeriodTransactions(updatedData, { categoryId: cat.id, type, amount: amt, fromMonth, toMonth, note: note || '' })
-      updatedData.transactions.slice(before).forEach(t => newIds.push(t.id))
+      // Capture IDs before generating so we can undo later
+      const result = generatePeriodTransactions(updatedData, { categoryId: cat.id, type, amount: amt, fromMonth, toMonth, note: note || '' })
+      const existingIds = new Set(updatedData.transactions.map(t => t.id))
+      result.transactions.filter(t => !existingIds.has(t.id)).forEach(t => newIds.push(t.id))
+      updatedData = result
       generated = true
     })
     if (!generated) return setErr('No valid amounts entered — nothing to generate')
