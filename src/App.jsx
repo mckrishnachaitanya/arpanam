@@ -13,10 +13,13 @@ export default function App() {
   const [screen, setScreen] = useState({ name: 'home', params: {} })
   const [updateAvailable, setUpdateAvailable] = useState(false)
 
+  const [autoCredited, setAutoCredited] = useState([])
+
   useEffect(() => {
-    let d = loadData()
-    d = runAutoCredit(d)
-    setData(d)
+    const d = loadData()
+    const { data: updated, credited } = runAutoCredit(d)
+    setData(updated)
+    if (credited.length > 0) setAutoCredited(credited)
   }, [])
 
   useEffect(() => {
@@ -76,6 +79,8 @@ export default function App() {
           onNavigate={navigate}
           onClearCache={handleClearCache}
           sync={sync}
+          autoCredited={autoCredited}
+          onDismissCredit={() => setAutoCredited([])}
         />
       ) : screen.name === 'category' ? (
         <CategoryScreen

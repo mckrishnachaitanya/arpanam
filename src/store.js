@@ -175,17 +175,16 @@ export function runAutoCredit(data) {
   const today = new Date()
   const triggerDay = data.settings.triggerDay
   let updated = data
-  let changed = false
+  const credited = [] // track what was credited for notification
 
   // Only run on or after trigger day
-  if (today.getDate() < triggerDay) return data
+  if (today.getDate() < triggerDay) return { data, credited }
 
   const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
 
   for (const cat of data.categories) {
     if (!cat.monthlyAmount || cat.monthlyAmount <= 0) continue
 
-    // Check if credit already exists for this month
     const alreadyCredited = data.transactions.some(t =>
       t.categoryId === cat.id &&
       t.type === 'credit' &&
@@ -206,11 +205,12 @@ export function runAutoCredit(data) {
         auto: true,
       }
       updated = { ...updated, transactions: [...updated.transactions, tx] }
-      changed = true
+      credited.push({ categoryName: cat.name, amount: cat.monthlyAmount })
     }
   }
 
-  return changed ? saveData(updated) : data
+  const finalData = credited.length > 0 ? saveData(updated) : data
+  return { data: finalData, credited }
 }
 
 // ─── Balance computation ──────────────────────────────────────────────────────
