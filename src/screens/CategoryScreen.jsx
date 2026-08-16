@@ -12,11 +12,15 @@ export default function CategoryScreen({ data, setData, categoryId, onBack }) {
   const cat = categories.find(c => c.id === categoryId)
   const [filter, setFilter] = useState('all')
   const [modal, setModal] = useState(null) // 'spend' | 'opening' | 'history' | 'edit'
+  const [sortAsc, setSortAsc] = useState(false)
   const [editTx, setEditTx] = useState(null)
 
   if (!cat) return null
 
-  const txs = getTransactions(data, categoryId, filter)
+  const txs = (() => {
+    const list = getTransactions(data, categoryId, filter)
+    return sortAsc ? [...list].reverse() : list
+  })()
   const balance = getCategoryBalance(data, categoryId)
 
   const closeModal = () => { setModal(null); setEditTx(null) }
@@ -44,6 +48,28 @@ export default function CategoryScreen({ data, setData, categoryId, onBack }) {
         <div style={s.balSub}>₹{cat.monthlyAmount?.toLocaleString('en-IN') || 0} / month</div>
       </div>
 
+      {/* Summary row */}
+      <div style={s.summaryRow}>
+        <div style={s.summaryItem}>
+          <div style={s.summaryLabel}>Total In</div>
+          <div style={{ ...s.summaryValue, color: '#4ade80' }}>
+            {fmt(data.transactions.filter(t => t.categoryId === categoryId && t.type === 'credit').reduce((s, t) => s + t.amount, 0))}
+          </div>
+        </div>
+        <div style={s.summaryDivider} />
+        <div style={s.summaryItem}>
+          <div style={s.summaryLabel}>Total Out</div>
+          <div style={{ ...s.summaryValue, color: '#ef4444' }}>
+            {fmt(data.transactions.filter(t => t.categoryId === categoryId && t.type === 'debit').reduce((s, t) => s + t.amount, 0))}
+          </div>
+        </div>
+        <div style={s.summaryDivider} />
+        <div style={s.summaryItem}>
+          <div style={s.summaryLabel}>Transactions</div>
+          <div style={s.summaryValue}>{data.transactions.filter(t => t.categoryId === categoryId).length}</div>
+        </div>
+      </div>
+
       {/* Action buttons */}
       <div style={s.actions}>
         <button onClick={() => setModal('spend')} style={s.actionBtn}>
@@ -60,8 +86,9 @@ export default function CategoryScreen({ data, setData, categoryId, onBack }) {
         </button>
       </div>
 
-      {/* Filter tabs */}
-      <div style={s.tabs}>
+      {/* Filter + Sort */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', marginBottom: 12 }}>
+        <div style={{ display: 'flex', gap: 6 }}>
         {TABS.map(t => (
           <button key={t} onClick={() => setFilter(t)} style={{
             ...s.tab, ...(filter === t ? s.tabActive : {})
@@ -451,5 +478,22 @@ Object.assign(s, {
     background: 'transparent', color: '#6b5a30',
     border: '1px solid #2a2010', borderRadius: 8,
     padding: '10px 20px', fontSize: 12, cursor: 'pointer',
+  },
+})
+
+Object.assign(s, {
+  summaryRow: {
+    display: 'flex', alignItems: 'center',
+    margin: '0 16px 16px', background: '#130f00',
+    border: '1px solid #2a2010', borderRadius: 12, padding: '12px 16px',
+  },
+  summaryItem: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 },
+  summaryLabel: { fontSize: 10, color: '#6b5a30', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' },
+  summaryValue: { fontSize: 13, fontWeight: 700, color: '#f1f1f3' },
+  summaryDivider: { width: 1, height: 32, background: '#2a2010' },
+  sortBtn: {
+    background: 'transparent', border: '1px solid #2a2010',
+    borderRadius: 20, padding: '6px 12px', color: '#6b5a30',
+    fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
   },
 })

@@ -1,6 +1,6 @@
 import { getCategories, getAllBalances, getTotalBalance, fmt } from '../store'
 
-export default function HomeScreen({ data, setData, onNavigate, onClearCache, sync }) {
+export default function HomeScreen({ data, setData, onNavigate, onClearCache, sync, autoCredited, onDismissCredit }) {
   const categories = getCategories(data)
   const balances = getAllBalances(data)
   const total = getTotalBalance(data)
@@ -27,6 +27,19 @@ export default function HomeScreen({ data, setData, onNavigate, onClearCache, sy
         </button>
         </div>
       </div>
+
+      {/* Auto credit banner */}
+      {autoCredited && autoCredited.length > 0 && (
+        <div style={s.creditBanner}>
+          <div style={s.creditBannerLeft}>
+            <div style={s.creditBannerTitle}>🪙 Monthly credits added</div>
+            <div style={s.creditBannerSub}>
+              {autoCredited.map(c => `${c.categoryName} +₹${c.amount.toLocaleString('en-IN')}`).join(' · ')}
+            </div>
+          </div>
+          <button onClick={onDismissCredit} style={s.creditBannerClose}>✕</button>
+        </div>
+      )}
 
       {/* Total */}
       <div style={s.totalCard}>
@@ -131,3 +144,16 @@ const s = {
     borderRadius: 8, padding: '8px 16px', fontSize: 12, cursor: 'pointer',
   },
 }
+
+Object.assign(s, {
+  creditBanner: {
+    margin: '12px 16px 0',
+    background: '#1a2a10', border: '1px solid #2a4a10',
+    borderRadius: 12, padding: '12px 14px',
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+  },
+  creditBannerLeft: { flex: 1 },
+  creditBannerTitle: { fontSize: 13, fontWeight: 700, color: '#4ade80', marginBottom: 3 },
+  creditBannerSub: { fontSize: 11, color: '#6b9a50', lineHeight: 1.5 },
+  creditBannerClose: { background: 'none', border: 'none', color: '#6b9a50', fontSize: 16, cursor: 'pointer', padding: 4, flexShrink: 0 },
+})
