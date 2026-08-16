@@ -89,11 +89,15 @@ export default function CategoryScreen({ data, setData, categoryId, onBack }) {
       {/* Filter + Sort */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', marginBottom: 12 }}>
         <div style={{ display: 'flex', gap: 6 }}>
-        {TABS.map(t => (
-          <button key={t} onClick={() => setFilter(t)} style={{
-            ...s.tab, ...(filter === t ? s.tabActive : {})
-          }}>{t.charAt(0).toUpperCase() + t.slice(1)}</button>
-        ))}
+          {TABS.map(t => (
+            <button key={t} onClick={() => setFilter(t)} style={{
+              ...s.tab, ...(filter === t ? s.tabActive : {})
+            }}>{t.charAt(0).toUpperCase() + t.slice(1)}</button>
+          ))}
+        </div>
+        <button onClick={() => setSortAsc(p => !p)} style={s.sortBtn}>
+          {sortAsc ? '↑ Oldest' : '↓ Newest'}
+        </button>
       </div>
 
       {/* Transaction list */}
