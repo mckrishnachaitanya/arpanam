@@ -13,9 +13,37 @@ export default function CategoryScreen({ data, setData, categoryId, onBack }) {
   const [filter, setFilter] = useState('all')
   const [modal, setModal] = useState(null) // 'spend' | 'opening' | 'history' | 'edit'
   const [sortAsc, setSortAsc] = useState(false)
+  const [selectMode, setSelectMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState(new Set())
   const [editTx, setEditTx] = useState(null)
 
   if (!cat) return null
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const exitSelectMode = () => {
+    setSelectMode(false)
+    setSelectedIds(new Set())
+  }
+
+  const handleBulkDelete = () => {
+    if (!selectedIds.size) return
+    if (confirm(`Delete ${selectedIds.size} transaction${selectedIds.size > 1 ? 's' : ''}?`)) {
+      const updated = saveData({
+        ...data,
+        transactions: data.transactions.filter(t => !selectedIds.has(t.id))
+      })
+      setData(updated)
+      exitSelectMode()
+    }
+  }
 
   const txs = (() => {
     const list = getTransactions(data, categoryId, filter)
@@ -38,7 +66,9 @@ export default function CategoryScreen({ data, setData, categoryId, onBack }) {
           <span style={s.headerEmoji}>{cat.emoji}</span>
           <span style={s.headerName}>{cat.name}</span>
         </div>
-        <div style={{ width: 38 }} />
+        <button onClick={() => selectMode ? exitSelectMode() : setSelectMode(true)} style={s.selectBtn}>
+          {selectMode ? 'Cancel' : 'Select'}
+        </button>
       </div>
 
       {/* Balance card */}
@@ -114,16 +144,34 @@ export default function CategoryScreen({ data, setData, categoryId, onBack }) {
               <div style={{ ...s.txAmount, color: tx.type === 'credit' ? '#4ade80' : '#ef4444' }}>
                 {tx.type === 'credit' ? '+' : '-'}{fmt(tx.amount)}
               </div>
-              <button onClick={() => { setEditTx(tx); setModal('edit') }} style={s.editBtn}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b5a30" strokeWidth="2" strokeLinecap="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-              </button>
+              {!selectMode && (
+                <button onClick={() => { setEditTx(tx); setModal('edit') }} style={s.editBtn}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b5a30" strokeWidth="2" strokeLinecap="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
         ))}
       </div>
+
+      {/* Bulk delete bar */}
+      {selectMode && (
+        <div style={s.bulkBar}>
+          <div style={s.bulkCount}>
+            {selectedIds.size} selected
+          </div>
+          <button
+            onClick={handleBulkDelete}
+            disabled={selectedIds.size === 0}
+            style={{ ...s.bulkDeleteBtn, opacity: selectedIds.size === 0 ? 0.4 : 1 }}
+          >
+            Delete ({selectedIds.size})
+          </button>
+        </div>
+      )}
 
       {/* Danger zone */}
       {txs.length > 0 && (
@@ -499,5 +547,40 @@ Object.assign(s, {
     background: 'transparent', border: '1px solid #2a2010',
     borderRadius: 20, padding: '6px 12px', color: '#6b5a30',
     fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+  },
+})
+
+Object.assign(s, {
+  selectBtn: {
+    background: 'none', border: '1px solid #ca8a04', borderRadius: 8,
+    color: '#ca8a04', fontSize: 12, fontWeight: 600,
+    padding: '6px 14px', cursor: 'pointer',
+  },
+  txCardSelected: {
+    background: '#1a1500', borderColor: '#ca8a04',
+  },
+  checkbox: {
+    width: 22, height: 22, borderRadius: 6,
+    border: '2px solid #3a3020', flexShrink: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    marginRight: 4,
+  },
+  checkboxChecked: {
+    background: '#ca8a04', borderColor: '#ca8a04',
+  },
+  bulkBar: {
+    position: 'fixed', bottom: 0, left: 0, right: 0,
+    background: '#1a1500', borderTop: '1px solid #2a2010',
+    padding: '14px 16px', paddingBottom: 'max(14px, env(safe-area-inset-bottom))',
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    zIndex: 50,
+  },
+  bulkCount: {
+    fontSize: 14, color: '#ca8a04', fontWeight: 600,
+  },
+  bulkDeleteBtn: {
+    background: '#ef4444', color: '#fff', border: 'none',
+    borderRadius: 10, padding: '10px 24px',
+    fontSize: 14, fontWeight: 700, cursor: 'pointer',
   },
 })
