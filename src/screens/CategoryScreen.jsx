@@ -135,7 +135,26 @@ export default function CategoryScreen({ data, setData, categoryId, onBack }) {
         {txs.length === 0 ? (
           <div style={s.empty}>No transactions yet.</div>
         ) : txs.map(tx => (
-          <div key={tx.id} style={s.txCard}>
+          <div
+            key={tx.id}
+            onClick={() => selectMode && toggleSelect(tx.id)}
+            style={{
+              ...s.txCard,
+              ...(selectMode && selectedIds.has(tx.id) ? s.txCardSelected : {}),
+              cursor: selectMode ? 'pointer' : 'default',
+            }}
+          >
+            {/* Checkbox shown in select mode */}
+            {selectMode && (
+              <div style={{
+                ...s.checkbox,
+                ...(selectedIds.has(tx.id) ? s.checkboxChecked : {})
+              }}>
+                {selectedIds.has(tx.id) && (
+                  <span style={{ color: '#0a0800', fontSize: 12, fontWeight: 700 }}>✓</span>
+                )}
+              </div>
+            )}
             <div style={s.txLeft}>
               <div style={s.txNote}>{tx.note}</div>
               <div style={s.txDate}>{fmtDate(tx.date)}</div>
