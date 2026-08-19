@@ -66,11 +66,12 @@ export function getCategories(data) {
   return [...data.categories].sort((a, b) => a.order - b.order)
 }
 
-export function addCategory(data, { name, emoji, monthlyAmount = 0 }) {
+export function addCategory(data, { name, emoji, monthlyAmount = 0, monthlyDebitAmount = 0 }) {
   const cat = {
     id: uuid(), name, emoji: emoji || '📁',
     order: data.categories.length,
     monthlyAmount,
+    monthlyDebitAmount,
     createdAt: new Date().toISOString(),
   }
   return saveData({ ...data, categories: [...data.categories, cat] })
@@ -171,7 +172,7 @@ export function generatePeriodTransactions(data, { categoryId, type, amount, fro
  * Called on app load. Checks if any categories are due a monthly credit
  * and generates them if not already present.
  */
-export function runAutoCredit(data) {
+export function runAutoTrigger(data) {
   const today = new Date()
   const triggerDay = data.settings.triggerDay
   let updated = data
@@ -209,9 +210,41 @@ export function runAutoCredit(data) {
     }
   }
 
-  const finalData = credited.length > 0 ? saveData(updated) : data
-  return { data: finalData, credited }
+  // Auto debit
+  const debited = []
+  for (const cat of data.categories) {
+    if (!cat.monthlyDebitAmount || cat.monthlyDebitAmount <= 0) continue
+
+    const alreadyDebited = updated.transactions.some(t =>
+      t.categoryId === cat.id &&
+      t.type === 'debit' &&
+      t.auto === true &&
+      t.date.startsWith(currentMonth)
+    )
+
+    if (!alreadyDebited) {
+      const date = new Date(today.getFullYear(), today.getMonth(), triggerDay)
+      const tx = {
+        id: uuid(),
+        categoryId: cat.id,
+        type: 'debit',
+        amount: cat.monthlyDebitAmount,
+        note: `Monthly debit · ${fmtMonth(currentMonth)}`,
+        date: date.toISOString(),
+        createdAt: new Date().toISOString(),
+        auto: true,
+      }
+      updated = { ...updated, transactions: [...updated.transactions, tx] }
+      debited.push({ categoryName: cat.name, amount: cat.monthlyDebitAmount })
+    }
+  }
+
+  const finalData = (credited.length > 0 || debited.length > 0) ? saveData(updated) : data
+  return { data: finalData, credited, debited }
 }
+
+// Keep old name as alias for backward compat
+export const runAutoCredit = runAutoTrigger
 
 // ─── Balance computation ──────────────────────────────────────────────────────
 export function getCategoryBalance(data, categoryId) {

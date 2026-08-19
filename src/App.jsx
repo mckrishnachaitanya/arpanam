@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { loadData, runAutoCredit } from './store'
+import { loadData, runAutoTrigger } from './store'
 import { usePIN } from './usePIN'
 import { useSync } from './useSync'
 import LockScreen from './screens/LockScreen'
@@ -17,9 +17,9 @@ export default function App() {
 
   useEffect(() => {
     const d = loadData()
-    const { data: updated, credited } = runAutoCredit(d)
+    const { data: updated, credited, debited } = runAutoTrigger(d)
     setData(updated)
-    if (credited.length > 0) setAutoCredited(credited)
+    if (credited.length > 0 || (debited && debited.length > 0)) setAutoCredited({ credited, debited: debited || [] })
   }, [])
 
   useEffect(() => {
