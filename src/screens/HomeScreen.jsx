@@ -29,13 +29,20 @@ export default function HomeScreen({ data, setData, onNavigate, onClearCache, sy
       </div>
 
       {/* Auto credit banner */}
-      {autoCredited && autoCredited.length > 0 && (
+      {autoCredited && (autoCredited.credited?.length > 0 || autoCredited.debited?.length > 0) && (
         <div style={s.creditBanner}>
           <div style={s.creditBannerLeft}>
-            <div style={s.creditBannerTitle}>🪙 Monthly credits added</div>
-            <div style={s.creditBannerSub}>
-              {autoCredited.map(c => `${c.categoryName} +₹${c.amount.toLocaleString('en-IN')}`).join(' · ')}
-            </div>
+            <div style={s.creditBannerTitle}>🪙 Monthly auto-entries added</div>
+            {autoCredited.credited?.length > 0 && (
+              <div style={s.creditBannerSub}>
+                Credits: {autoCredited.credited.map(c => `${c.categoryName} +₹${c.amount.toLocaleString('en-IN')}`).join(' · ')}
+              </div>
+            )}
+            {autoCredited.debited?.length > 0 && (
+              <div style={{ ...s.creditBannerSub, color: '#f87171' }}>
+                Debits: {autoCredited.debited.map(c => `${c.categoryName} -₹${c.amount.toLocaleString('en-IN')}`).join(' · ')}
+              </div>
+            )}
           </div>
           <button onClick={onDismissCredit} style={s.creditBannerClose}>✕</button>
         </div>

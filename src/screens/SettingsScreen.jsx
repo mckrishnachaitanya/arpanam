@@ -90,11 +90,13 @@ function BucketRow({ cat, data, setData }) {
   const [name, setName] = useState(cat.name)
   const [emoji, setEmoji] = useState(cat.emoji)
   const [amount, setAmount] = useState(String(cat.monthlyAmount || 0))
+  const [debitAmount, setDebitAmount] = useState(String(cat.monthlyDebitAmount || 0))
   const [showPicker, setShowPicker] = useState(false)
 
   const save = () => {
     const val = parseFloat(amount) || 0
-    setData(updateCategory(data, cat.id, { name, emoji, monthlyAmount: val }))
+    const dval = parseFloat(debitAmount) || 0
+    setData(updateCategory(data, cat.id, { name, emoji, monthlyAmount: val, monthlyDebitAmount: dval }))
     setEditing(false)
   }
 
@@ -118,6 +120,11 @@ function BucketRow({ cat, data, setData }) {
           <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
             style={{ ...s.input, width: 120, textAlign: 'right', marginBottom: 0 }} />
         </div>
+        <div style={{ ...s.amountRow, marginTop: 10 }}>
+          <div style={s.amountLabel}>Monthly debit (₹)</div>
+          <input type="number" value={debitAmount} onChange={e => setDebitAmount(e.target.value)}
+            style={{ ...s.input, width: 120, textAlign: 'right', marginBottom: 0 }} />
+        </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
           <button onClick={remove} style={s.deleteBtn}>Delete</button>
           <button onClick={() => setEditing(false)} style={s.cancelBtn}>Cancel</button>
@@ -132,7 +139,7 @@ function BucketRow({ cat, data, setData }) {
       <span style={s.bucketEmoji}>{cat.emoji}</span>
       <div style={s.bucketInfo}>
         <div style={s.bucketName}>{cat.name}</div>
-        <div style={s.bucketAmount}>₹{(cat.monthlyAmount || 0).toLocaleString('en-IN')}/mo</div>
+        <div style={s.bucketAmount}>+₹{(cat.monthlyAmount || 0).toLocaleString('en-IN')} / -₹{(cat.monthlyDebitAmount || 0).toLocaleString('en-IN')} per mo</div>
       </div>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3a3020" strokeWidth="2" strokeLinecap="round">
         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -148,12 +155,13 @@ function AddBucketRow({ data, setData }) {
   const [name, setName] = useState('')
   const [emoji, setEmoji] = useState('📁')
   const [amount, setAmount] = useState('')
+  const [debitAmount, setDebitAmount] = useState('')
   const [showPicker, setShowPicker] = useState(false)
 
   const save = () => {
     if (!name.trim()) return
-    setData(addCategory(data, { name: name.trim(), emoji, monthlyAmount: parseFloat(amount) || 0 }))
-    setName(''); setEmoji('📁'); setAmount('')
+    setData(addCategory(data, { name: name.trim(), emoji, monthlyAmount: parseFloat(amount) || 0, monthlyDebitAmount: parseFloat(debitAmount) || 0 }))
+    setName(''); setEmoji('📁'); setAmount(''); setDebitAmount('')
     setAdding(false)
   }
 
@@ -169,6 +177,11 @@ function AddBucketRow({ data, setData }) {
         <div style={s.amountRow}>
           <div style={s.amountLabel}>Monthly credit (₹)</div>
           <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
+            style={{ ...s.input, width: 120, textAlign: 'right', marginBottom: 0 }} />
+        </div>
+        <div style={{ ...s.amountRow, marginTop: 10 }}>
+          <div style={s.amountLabel}>Monthly debit (₹)</div>
+          <input type="number" value={debitAmount} onChange={e => setDebitAmount(e.target.value)}
             style={{ ...s.input, width: 120, textAlign: 'right', marginBottom: 0 }} />
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
